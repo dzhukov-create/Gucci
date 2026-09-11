@@ -43,7 +43,32 @@ ASO-focused system prompt.
 wrangler dev
 ```
 
+## Bot profile (BotFather)
+
+Message **@BotFather** in Telegram and run these against your bot to set its
+avatar and description:
+
+- `/setuserpic` → select the bot → upload `avatar.png` from this folder
+- `/setabouttext` → select the bot → paste:
+  ```
+  RadASO Bot 🚀 — ШІ-асистент з ASO, Apple Search Ads та маркетингу застосунків
+  ```
+- `/setdescription` → select the bot → paste:
+  ```
+  RadASO Bot — асистент на базі Claude для App Store Optimization.
+
+  Допомагає:
+  • підбирати ключові слова й метадані (title, subtitle, keywords)
+  • покращувати іконку, скріншоти й відео для App Store / Google Play
+  • планувати Apple Search Ads: структура кампаній, ставки, звіти
+  • аналізувати конкурентів і тренди ASO-ринку
+  • перетворювати дослідження на готовий контент (пости, брифи)
+
+  Просто напиши питання — відповість конкретно й по суті.
+  ```
+
 ## Files
 
 - `src/index.js` — Worker: Telegram webhook handler + Claude API call
 - `wrangler.toml` — Worker config (secrets are NOT stored here)
+- `avatar.png` — bot profile picture (512×512)
