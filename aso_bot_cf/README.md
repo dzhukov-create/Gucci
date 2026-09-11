@@ -43,6 +43,26 @@ ASO-focused system prompt.
 wrangler dev
 ```
 
+## Stats (`/stats` command)
+
+Tracks unique users and recent errors in Cloudflare KV. Setup (one time):
+
+1. Create the KV namespace:
+   ```bash
+   wrangler kv namespace create ASO_BOT_KV
+   ```
+   This prints an `id`. In `wrangler.toml`, uncomment the `[[kv_namespaces]]`
+   block and paste that id.
+2. Get your Telegram chat id — message **@userinfobot** on Telegram, it
+   replies with your numeric id.
+3. In `wrangler.toml`, uncomment `ADMIN_CHAT_ID = "..."` under `[vars]` and
+   put your id there.
+4. `wrangler deploy` again.
+
+Now only your chat can send `/stats` to the bot and get unique-user count +
+last 5 errors. Everyone else's `/stats` message just goes to Claude as a
+normal question.
+
 ## Bot profile (BotFather)
 
 Message **@BotFather** in Telegram and run these against your bot to set its

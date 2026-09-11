@@ -8,5 +8,12 @@ compatibility_date = "2024-09-01"
 #   WEBHOOK_SECRET       - random string you choose, used to verify Telegram calls
 
 [vars]
-# Non-secret config can go here, e.g.:
-# ASO_BOT_NAME = "RadASO Bot"
+# ADMIN_CHAT_ID = "your Telegram chat id" — only this chat can use /stats.
+# Get your chat id by messaging @userinfobot on Telegram.
+
+# KV storage for /stats (unique users + recent errors). Create it once with:
+#   wrangler kv namespace create ASO_BOT_KV
+# then paste the printed id below.
+# [[kv_namespaces]]
+# binding = "ASO_BOT_KV"
+# id = "REPLACE_WITH_NAMESPACE_ID"

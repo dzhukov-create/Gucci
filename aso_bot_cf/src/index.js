@@ -35,6 +35,55 @@ async function callClaude(env, userText) {
   return data.content?.[0]?.text ?? "Не вдалося отримати відповідь від Claude.";
 }
 
+async function trackUser(env, chatId) {
+  if (!env.ASO_BOT_KV) return;
+  await env.ASO_BOT_KV.put(`user:${chatId}`, new Date().toISOString());
+}
+
+async function logError(env, chatId, err) {
+  console.error(err);
+  if (!env.ASO_BOT_KV) return;
+  const key = `error:${Date.now()}`;
+  await env.ASO_BOT_KV.put(
+    key,
+    JSON.stringify({ chatId, message: String(err?.message ?? err) }),
+    { expirationTtl: 60 * 60 * 24 * 30 } // 30 days
+  );
+}
+
+async function buildStats(env) {
+  if (!env.ASO_BOT_KV) {
+    return "KV не підключено — статистика недоступна. Дивись README, розділ Stats.";
+  }
+
+  const users = await env.ASO_BOT_KV.list({ prefix: "user:" });
+  const errorsList = await env.ASO_BOT_KV.list({ prefix: "error:" });
+  const recentErrorKeys = errorsList.keys
+    .map((k) => k.name)
+    .sort()
+    .slice(-5)
+    .reverse();
+
+  let text =
+    `📊 *Статистика RadASO Bot*\n\n` +
+    `Унікальних користувачів: *${users.keys.length}*\n` +
+    `Помилок за 30 днів: *${errorsList.keys.length}*\n`;
+
+  if (recentErrorKeys.length > 0) {
+    text += `\n*Останні помилки:*\n`;
+    for (const key of recentErrorKeys) {
+      const raw = await env.ASO_BOT_KV.get(key);
+      if (!raw) continue;
+      const { chatId, message } = JSON.parse(raw);
+      const ts = key.replace("error:", "");
+      const date = new Date(Number(ts)).toISOString().replace("T", " ").slice(0, 16);
+      text += `\n\`${date}\` (chat ${chatId}):\n${message.slice(0, 200)}\n`;
+    }
+  }
+
+  return text;
+}
+
 async function sendTelegramMessage(env, chatId, text) {
   const MAX_LEN = 4000;
   const chunks = [];
@@ -61,6 +110,13 @@ async function handleUpdate(env, update) {
 
   const chatId = message.chat.id;
   const text = message.text.trim();
+
+  await trackUser(env, chatId);
+
+  if (text === "/stats" && env.ADMIN_CHAT_ID && String(chatId) === String(env.ADMIN_CHAT_ID)) {
+    await sendTelegramMessage(env, chatId, await buildStats(env));
+    return;
+  }
 
   if (text === "/start" || text === "/help") {
     await sendTelegramMessage(
@@ -91,7 +147,7 @@ async function handleUpdate(env, update) {
       chatId,
       "Сталася помилка при зверненні до Claude. Спробуй ще раз трохи пізніше."
     );
-    console.error(err);
+    await logError(env, chatId, err);
   }
 }
 
